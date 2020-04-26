@@ -5,6 +5,12 @@ project(librealsense2 LANGUAGES CXX C)
 include(CMake/lrs_options.cmake)
 include(CMake/connectivity_check.cmake)
 
+#Deprecation message, should be removed in future releases
+if(${FORCE_LIBUVC} OR ${FORCE_WINUSB_UVC} OR ${ANDROID_USB_HOST_UVC})
+    MESSAGE(DEPRECATION "FORCE_LIBUVC, FORCE_WINUSB_UVC and ANDROID_USB_HOST_UVC are deprecated, use FORCE_RSUSB_BACKEND instead")
+    set(FORCE_RSUSB_BACKEND ON)
+endif()
+
 # Checking Internet connection, as TM2 needs to download the FW from amazon cloud
 if(BUILD_WITH_TM2 AND NOT INTERNET_CONNECTION)
     message(WARNING "No internet connection, disabling BUILD_WITH_TM2")
@@ -79,6 +85,11 @@ endif()
 
 if(BUILD_UNIT_TESTS)
     add_subdirectory(unit-tests)
+endif()
+
+if(BUILD_NETWORK_DEVICE)
+    add_subdirectory(src/ethernet)
+    add_subdirectory(src/compression)
 endif()
 
 if(BUILD_WITH_TM2)

@@ -521,7 +521,7 @@ namespace rs2
 
         /**
         * retrieve data size from frame handle
-        * \return               the pointer to the start of the frame data
+        * \return               the number of bytes in frame
         */
         const int get_data_size() const
         {
@@ -814,6 +814,18 @@ namespace rs2
             error::handle(e);
             return r;
         }
+
+        /**
+        * Provide the scaling factor to use when converting from get_data() units to meters
+        * \return float - depth, in meters, per 1 unit stored in the frame data
+        */
+        float get_units() const
+        {
+            rs2_error * e = nullptr;
+            auto r = rs2_depth_frame_get_units( get(), &e );
+            error::handle( e );
+            return r;
+        }
     };
 
     class disparity_frame : public depth_frame
@@ -943,7 +955,7 @@ namespace rs2
         frame first_or_default(rs2_stream s, rs2_format f = RS2_FORMAT_ANY) const
         {
             frame result;
-            foreach([&result, s, f](frame frm) {
+            foreach_rs([&result, s, f](frame frm) {
                 if (!result && frm.get_profile().stream_type() == s && (f == RS2_FORMAT_ANY || f == frm.get_profile().format()))
                 {
                     result = std::move(frm);
@@ -1003,7 +1015,7 @@ namespace rs2
             }
             else
             {
-                foreach([&f, index](const frame& frm) {
+                foreach_rs([&f, index](const frame& frm) {
                     if (frm.get_profile().stream_type() == RS2_STREAM_INFRARED &&
                         frm.get_profile().stream_index() == index) f = frm;
                 });
@@ -1025,7 +1037,7 @@ namespace rs2
             }
             else
             {
-                foreach([&f, index](const frame& frm) {
+                foreach_rs([&f, index](const frame& frm) {
                     if (frm.get_profile().stream_type() == RS2_STREAM_FISHEYE &&
                         frm.get_profile().stream_index() == index) f = frm;
                 });
@@ -1047,7 +1059,7 @@ namespace rs2
             }
             else
             {
-                foreach([&f, index](const frame& frm) {
+                foreach_rs([&f, index](const frame& frm) {
                     if (frm.get_profile().stream_type() == RS2_STREAM_POSE &&
                         frm.get_profile().stream_index() == index) f = frm;
                 });
@@ -1069,7 +1081,7 @@ namespace rs2
         * \param[in] action - instance with () operator implemented will be invoke after frame extraction.
         */
         template<class T>
-        void foreach(T action) const
+        void foreach_rs(T action) const
         {
             rs2_error* e = nullptr;
             auto count = size();
